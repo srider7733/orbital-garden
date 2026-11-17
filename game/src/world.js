@@ -1,0 +1,5 @@
+import {W,clamp} from './config.js';
+export function fresh(){return {mode:'title',t:0,score:0,lives:3,ring:0,spawn:0,items:[],spark:[],best:+localStorage.orbitBest||0}}
+export function start(s){s.mode='play';s.t=0;s.score=0;s.lives=3;s.ring=0;s.items=[];s.spark=[]}
+function add(s){let a=Math.random()*Math.PI*2, moth=Math.random()<.28+Math.min(s.t/220,.25);s.items.push({a,r:1.05,moth,spin:(Math.random()-.5)*.8})}
+export function step(s,k,dt){if(s.mode!=='play')return;s.t+=dt;s.spawn-=dt;if(s.spawn<0){s.spawn=W.spawn*Math.max(.35,1-s.t/100);add(s)};let axis=(k.l?-1:0)+(k.r?1:0);if(k.mx!=null&&Math.abs(k.mx-.5)>.03)axis=k.mx>.5?1:-1;s.ring+=axis*dt*2.5;s.ring=(s.ring+Math.PI*2)%(Math.PI*2);for(let o of s.items){o.r-=dt*.16;o.a+=o.spin*dt;if(o.r<.08){o.dead=1;continue}let d=Math.abs(Math.atan2(Math.sin(o.a-s.ring),Math.cos(o.a-s.ring)));if(d<.24&&o.r<.38){o.dead=1;if(o.moth){s.lives--;s.spark.push({x:0,y:0,c:1});if(s.lives<1)s.mode='over'}else{s.score++;s.spark.push({x:0,y:0,c:0});if(s.score>=W.goal)s.mode='win'}}}s.items=s.items.filter(o=>!o.dead);if(s.mode!=='play'){s.best=Math.max(s.best,s.score);localStorage.orbitBest=s.best}}
